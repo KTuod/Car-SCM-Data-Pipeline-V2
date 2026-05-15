@@ -1,0 +1,29 @@
+{
+  "version": 4,
+  "terraform_version": "1.14.8",
+  "serial": 16,
+  "lineage": "3407634d-c151-8af5-f558-6388552784be",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "cloudflare_r2_bucket",
+      "name": "data_lake",
+      "provider": "provider[\"registry.terraform.io/cloudflare/cloudflare\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "account_id": "950ba22729fa2cbcab5c224a57ac0c74",
+            "id": "scm-car-dataset",
+            "location": "APAC",
+            "name": "scm-car-dataset"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}
