@@ -12,11 +12,11 @@ clients:
       password: ${GRAFANA_LOKI_TOKEN}
 
 scrape_configs:
-- job_name: olist_pipeline_logs
+- job_name: car_scm_logs
   static_configs:
   - targets:
       - localhost
     labels:
-      job: olist_pipeline
+      job: car_scm_pipeline
       env: dev
-      __path__: /workspace/logs/*.log
+      __path__: /workspaces/scm-data-pipeline-v2/logs/*.log

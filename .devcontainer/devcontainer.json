@@ -24,6 +24,6 @@
       ]
     }
   },
-  "postCreateCommand": "pip install --upgrade pip && if [ -f requirements.txt ]; then pip install -r requirements.txt; fi",
-  "postStartCommand": "nohup promtail -config.file=/workspace/.devcontainer/promtail-config.yml > /tmp/promtail.out 2>&1 &"
+  "postCreateCommand": "pip install --upgrade pip && if [ -f requirements.txt ]; then pip install -r requirements.txt; fi && echo 'set -a && source /workspaces/scm-data-pipeline-v2/.env && set +a' >> ~/.bashrc",
+  "postStartCommand": "bash /workspaces/scm-data-pipeline-v2/.devcontainer/start-promtail.sh"
 }
