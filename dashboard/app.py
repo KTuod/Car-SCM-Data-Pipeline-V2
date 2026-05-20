@@ -18,6 +18,34 @@ st.set_page_config(
     layout = "wide"
 )
 
+st.markdown("""
+<style>
+/* Bo góc, đổ bóng cho các khối Metric (Chế độ tối) */
+div[data-testid="stMetric"] {
+    background-color: #262730; 
+    border: 1px solid #3a3b45; 
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); 
+    transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Bổ sung transition cho viền */
+}
+
+/* Hiệu ứng nổi lên và HIỆN VIỀN ĐỎ khi di chuột vào */
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.5); 
+    border-color: #ff4b4b; /* <-- DÒNG MỚI BỔ SUNG: Đổi màu viền sang đỏ */
+}
+
+/* Đổi màu tiêu đề của Metric (chữ sáng màu) */
+div[data-testid="stMetricLabel"] > div > div > p {
+    color: #aeb4b9; 
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Load the environment variables
 load_dotenv()
 
@@ -42,134 +70,175 @@ def get_db_connection():
 
 con = get_db_connection()
 
-@st.cache_data(ttl=600)
-def get_highest_sales_car():
-    query = """
-        SELECT 
-            p.CarMaker,
-            p.CarModel,
-            SUM(CAST(f.Quantity AS DOUBLE)) AS Total_Quantity_Sold
-        FROM scm_db.main.fact_sales f
-        JOIN scm_db.main.dim_product p ON f.ProductID = p.ProductID
-        GROUP BY p.CarMaker, p.CarModel
-        ORDER BY Total_Quantity_Sold DESC
-        LIMIT 1;
-    """
-    return con.execute(query).df()
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Select a page:", ["Sales Summary", "Customer Feedback"])
 
+from db_queries import (
+    mostPopularCarType,
+    mostPopularCarMaker,
+    mostCarColour,
+    totalSales,
+    highestSupplierSales,
 
+    chart_salesByMonth,
+    chart_carColour,
+    chart_creditCard,
+    chart_jobGroup,
+    chart_carGroup,
+    matrix_carType_Color,
+    matrix_jobGroup_carMaker
+)
 
-# ----------------------------------------------------------------------
-# PAGE 1: SALES OVERVIEW
-# ----------------------------------------------------------------------
-if page == "Sales Overview":
-    st.header("Sales & Revenue Overview")
+if page == "Sales Summary":
+    # PAGE 1: SALES SUMMARY
+    ## Metrics
+
+    st.header("SALES SUMMARY")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        highest_car_df = get_highest_sales_car()
-        if not highest_car_df.empty:
-            maker = highest_car_df['CarMaker'].iloc[0]
-            model = highest_car_df['CarModel'].iloc[0]
-            qty = highest_car_df['Total_Quantity_Sold'].iloc[0]
-            st.metric("Best Selling Car", f"{maker} {model}", f"{qty:,.0f} units")
-            
-    with col2:
-        avg_sales_df = average_sales()
-        if not avg_sales_df.empty:
-            avg_val = avg_sales_df['Average_Order_Value'].iloc[0]
-            if pd.notnull(avg_val):
-                st.metric("Average Order Value", f"${avg_val:,.2f}")
-            else:
-                st.metric("Average Order Value", "$0.00")
-            
-    with col3:
-        supplier_df = get_revenue_by_supplier()
-        if not supplier_df.empty:
-            total_rev = supplier_df['Total_Revenue'].sum()
-            st.metric("Total System Revenue", f"${total_rev:,.2f}")
+        df_sales = totalSales(con)
+        if not df_sales.empty:
+            val_sales = df_sales.iloc[0, 0] 
+            st.metric(label="Total Sales", value=f"{val_sales:,.0f}")
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    
+    with col2:
+        df_type = mostPopularCarType(con)
+        if not df_type.empty:
+            val_type = df_type.iloc[0, 0]
+            st.metric(label="Most Popular Type", value=str(val_type))
+
+    with col3:
+        df_maker = mostPopularCarMaker(con)
+        if not df_maker.empty:
+            val_maker = df_maker.iloc[0, 0]
+            st.metric(label="Top Car Maker", value=str(val_maker))
+
+    with col4:
+        df_color = mostCarColour(con)
+        if not df_color.empty:
+            val_color = df_color.iloc[0, 0]
+            st.metric(label="Most Popular Colour", value=str(val_color))
+
+    with col5:
+        df_supplier = highestSupplierSales(con)
+        if not df_supplier.empty:
+            val_supplier = df_supplier.iloc[0, 0]
+            st.metric(label="Highest Supplier Sales", value=str(val_supplier))
+        
+
+    st.markdown("---") # Thêm một đường kẻ ngang phân cách
+    st.subheader("📊 Phân tích Chi tiết")
+
+    # =================================================================
+    # HÀNG 1: BIỂU ĐỒ ĐƯỜNG (TIME SERIES) - CHIẾM TOÀN BỘ CHIỀU NGANG
+    # =================================================================
+    df_month = chart_salesByMonth(con)
+    if not df_month.empty:
+        fig_month = px.line(
+            df_month, 
+            x=df_month.columns[0], # Cột thời gian
+            y=df_month.columns[1], # Cột doanh số
+            title="Xu hướng Doanh số theo tháng",
+            markers=True # Hiển thị các điểm chấm trên đường
+        )
+        st.plotly_chart(fig_month, use_container_width=True)
+
+    # =================================================================
+    # HÀNG 2: BIỂU ĐỒ TRÒN (PIE/DONUT CHART) - CHIA 2 CỘT
+    # =================================================================
     col_chart1, col_chart2 = st.columns(2)
+
     with col_chart1:
-        st.subheader("Revenue per Month")
-        df_rev_month = revenue_per_month()
-        if not df_rev_month.empty:
-            df_rev_month['Date'] = pd.to_datetime(df_rev_month['Year'].astype(str) + '-' + df_rev_month['Month'].astype(str) + '-01')
-            df_rev_month = df_rev_month.sort_values('Date')
-            fig_month = px.line(df_rev_month, x='Date', y='Monthly_Revenue', markers=True, labels={'Monthly_Revenue': 'Revenue ($)', 'Date': 'Time'})
-            st.plotly_chart(fig_month, use_container_width=True)
+        df_color = chart_carColour(con)
+        if not df_color.empty:
+            # Biểu đồ Donut (có lỗ ở giữa)
+            fig_color = px.pie(df_color, names=df_color.columns[0], values=df_color.columns[1], title="Tỷ lệ ưa chuộng Màu xe", hole=0.4)
+            st.plotly_chart(fig_color, use_container_width=True)
 
     with col_chart2:
-        st.subheader("Average Revenue by Car Type")
-        df_sales_car = sales_per_car()
-        if not df_sales_car.empty:
-            fig_type = px.bar(df_sales_car, x='car_type', y='Average_Revenue_Per_Transaction', color='car_type', text_auto='.2s')
-            st.plotly_chart(fig_type, use_container_width=True)
-
-    col_chart3, col_chart4 = st.columns(2)
-    with col_chart3:
-        st.subheader("Top 10 Car Models by Revenue")
-        df_rev_model = revenue_per_carmodel().head(10)
-        if not df_rev_model.empty:
-            fig_model = px.bar(df_rev_model, x='Total_Revenue', y='CarModel', orientation='h', text_auto='.2s').update_yaxes(categoryorder="total ascending")
-            st.plotly_chart(fig_model, use_container_width=True)
-            
-    with col_chart4:
-        st.subheader("Revenue Distribution by Credit Card Type")
-        df_credit = revenue_per_credit()
+        df_credit = chart_creditCard(con)
         if not df_credit.empty:
-            fig_credit = px.pie(df_credit, values='Total_Revenue', names='CreditCardType', hole=0.3)
+            # Biểu đồ tròn cơ bản
+            fig_credit = px.pie(df_credit, names=df_credit.columns[0], values=df_credit.columns[1], title="Phân bổ Phương thức thanh toán (Thẻ)")
             st.plotly_chart(fig_credit, use_container_width=True)
 
-# ----------------------------------------------------------------------
-# PAGE 2: CUSTOMER FEEDBACK
-# ----------------------------------------------------------------------
-elif page == "Customer Feedback":
-    st.header("Customer Feedback Analysis")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Feedback Ratio")
-        df_feedback = get_feedback_distribution()
-        if not df_feedback.empty:
-            fig_fb = px.pie(df_feedback, values='Total_Feedbacks', names='CustomerFeedback')
-            st.plotly_chart(fig_fb, use_container_width=True)
-            
-    with col2:
-        st.subheader("Revenue by Feedback Level")
-        df_rev_feedback = get_revenue_by_feedback()
-        if not df_rev_feedback.empty:
-            fig_rev_fb = px.bar(df_rev_feedback, x='CustomerFeedback', y='Total_Revenue', color='CustomerFeedback', text_auto='.2s')
-            st.plotly_chart(fig_rev_fb, use_container_width=True)
-            
-    st.markdown("---")
-    
-    st.subheader("Top 10 Cities with Highest Negative Feedback Rate (Bad / Very Bad)")
-    df_neg_city = get_negative_feedback_by_city()
-    if not df_neg_city.empty:
-        fig_neg = px.bar(df_neg_city, x='City', y='Negative_Rate', text_auto='.2f', labels={'Negative_Rate': 'Negative Rate (%)'})
-        st.plotly_chart(fig_neg, use_container_width=True)
+    # =================================================================
+    # HÀNG 3: BIỂU ĐỒ CỘT (BAR CHART) - CHIA 2 CỘT
+    # =================================================================
+    col_chart3, col_chart4 = st.columns(2)
 
+    with col_chart3:
+        df_job = chart_jobGroup(con)
+        if not df_job.empty:
+            fig_job = px.bar(df_job, x=df_job.columns[0], y=df_job.columns[1], title="Khách hàng theo Nhóm nghề nghiệp", text_auto='.2s')
+            st.plotly_chart(fig_job, use_container_width=True)
+
+    with col_chart4:
+        df_group = chart_carGroup(con)
+        if not df_group.empty:
+            fig_group = px.bar(df_group, x=df_group.columns[0], y=df_group.columns[1], title="Doanh số theo Phân khúc xe", text_auto='.2s')
+            st.plotly_chart(fig_group, use_container_width=True)
+
+    # =================================================================
+    # HÀNG 4: MATRIX (BẢNG DỮ LIỆU ĐA CHIỀU)
+    # =================================================================
     st.markdown("---")
-    
-    st.subheader("Customer Preference Lookup (Interactive)")
-    df_prefs = get_customer_preferences()
-    
-    if not df_prefs.empty:
-        col_sel1, col_sel2 = st.columns(2)
-        with col_sel1:
-            job_groups = df_prefs['job_group'].dropna().unique()
-            selected_job = st.selectbox("Select Job Group:", sorted(job_groups))
-        with col_sel2:
-            car_models = df_prefs[df_prefs['job_group'] == selected_job]['CarModel'].dropna().unique()
-            selected_model = st.selectbox("Select Car Model:", sorted(car_models))
+    st.subheader("🔥 Biểu đồ nhiệt Ma trận (Heatmap)")
+
+    col_mat1, col_mat2 = st.columns(2)
+
+    with col_mat1:
+        st.markdown("**Ma trận Loại xe & Màu sắc**")
+        df_mat_color = matrix_carType_Color(con)
+        
+        if not df_mat_color.empty:
+            # Mẹo: Đặt cột chữ đầu tiên làm hàng (Index) để Plotly hiểu nhãn của trục Y
+            df_heat1 = df_mat_color.set_index(df_mat_color.columns[0])
             
-        if st.button("View Concentration Area", type="primary"):
-            df_focus = get_customer_location_focus(selected_job, selected_model)
-            if not df_focus.empty:
-                st.dataframe(df_focus, use_container_width=True, hide_index=True)
+            # Vẽ Heatmap bằng Plotly Express
+            fig_heat1 = px.imshow(
+                df_heat1,
+                text_auto=True,               # Hiện số lượng trực tiếp lên từng ô màu
+                aspect="auto",                # Tự động co giãn vừa vặn khung hình
+                color_continuous_scale="Blues" # Tông màu xanh dương (từ nhạt đến đậm)
+            )
+            
+            # Cập nhật layout cho đẹp hơn
+            fig_heat1.update_layout(
+                xaxis_title="Màu sắc xe",
+                yaxis_title="Loại xe",
+                coloraxis_showscale=True      # Hiện thanh thước đo màu ở bên cạnh
+            )
+            st.plotly_chart(fig_heat1, use_container_width=True)
+
+    with col_mat2:
+        st.markdown("**Ma trận Nghề nghiệp & Hãng xe**")
+        df_mat_maker = matrix_jobGroup_carMaker(con)
+        
+        if not df_mat_maker.empty:
+            # ĐỀ PHÒNG: Nếu SQL trả về dạng 3 cột dọc (Long format) thay vì bảng ma trận
+            # Ta dùng lệnh .pivot để tự động xếp thành ma trận 2 chiều trước khi vẽ
+            if len(df_mat_maker.columns) == 3:
+                df_heat2 = df_mat_maker.pivot(
+                    index=df_mat_maker.columns[0], 
+                    columns=df_mat_maker.columns[1], 
+                    values=df_mat_maker.columns[2]
+                ).fillna(0)
             else:
-                st.info("No order data for this job group and car model combination.")
+                df_heat2 = df_mat_maker.set_index(df_mat_maker.columns[0])
+                
+            # Vẽ Heatmap
+            fig_heat2 = px.imshow(
+                df_heat2,
+                text_auto=True,
+                aspect="auto",
+                color_continuous_scale="Oranges" # Tông màu cam sang trọng
+            )
+            
+            fig_heat2.update_layout(
+                xaxis_title="Hãng xe",
+                yaxis_title="Nhóm nghề nghiệp"
+            )
+            st.plotly_chart(fig_heat2, use_container_width=True)
