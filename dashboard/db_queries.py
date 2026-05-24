@@ -69,6 +69,12 @@ def chart_salesByMonth(_con):
     return _con.execute(query).df()
 
 @st.cache_data(ttl = 600)
+def chart_carMaker(_con):
+    filepath = "queries/page_1/charts/charts_carMaker.sql"
+    query = read_sql_file(filepath)
+    return _con.execute(query).df()
+
+@st.cache_data(ttl = 600)
 def matrix_carType_Color(_con):
     filepath = "queries/page_1/charts/matrix_carType_Color.sql"
     query = read_sql_file(filepath)
@@ -77,5 +83,11 @@ def matrix_carType_Color(_con):
 @st.cache_data(ttl = 600)
 def matrix_jobGroup_carMaker(_con):
     filepath = "queries/page_1/charts/matrix_jobGroup_carMaker.sql"
+    query = read_sql_file(filepath)
+    return _con.execute(query).df()
+
+@st.cache_data(ttl = 600)
+def charts_revenueByCarMaker(_con):
+    filepath = "queries/page_1/charts/charts_revenueByCarMaker.sql"
     query = read_sql_file(filepath)
     return _con.execute(query).df()
