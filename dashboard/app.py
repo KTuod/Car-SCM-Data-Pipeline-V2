@@ -26,13 +26,13 @@ div[data-testid="stMetric"] {
     padding: 15px 20px;
     border-radius: 10px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3); 
-    transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Bổ sung transition cho viền */
+    transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
 div[data-testid="stMetric"]:hover {
     transform: translateY(-5px);
     box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.5); 
-    border-color: #ff4b4b; /* <-- DÒNG MỚI BỔ SUNG: Đổi màu viền sang đỏ */
+    border-color: #ff4b4b;
 }
 
 

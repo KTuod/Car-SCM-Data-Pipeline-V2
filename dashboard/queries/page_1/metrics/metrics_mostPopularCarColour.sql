@@ -3,9 +3,11 @@
 SELECT Car_Color_Group
 FROM(
     SELECT
-        CarColor AS 'Car_Color_Group',
-        COUNT(CarColor) AS 'Count_Car_Color'
-    FROM scm_db.dim_product
+        p.CarColor AS 'Car_Color_Group',
+        SUM(f.Quantity) AS Quantity
+    FROM scm_db.dim_product p
+    JOIN scm_db.fact_sales f
+    ON p.ProductID = f.ProductID
     GROUP BY CarColor
     ORDER BY COUNT(CarColor) DESC
     LIMIT 1
