@@ -86,7 +86,21 @@ from db_queries import (
     chart_carMaker,
     charts_revenueByCarMaker,
     matrix_carType_Color,
-    matrix_jobGroup_carMaker
+    matrix_jobGroup_carMaker,
+    mostNegativeReviewJobGroup,
+    mostPopularFeedback,
+    mostPopularShipMode,
+    mostPositiveCarMaker,
+    mostPositiveCarType,
+    chart_shipModeShipping,
+    chart_shippingLeadtime,
+    chart_positiveCarMaker,
+    chart_negativeCarMaker,
+    chart_positiveCarType,
+    chart_negativeCarType,
+    matrix_feedback_carMaker,
+    matrix_feedback_carType,
+    matrix_feedback_jobGroup
 )
 
 if page == "Sales Summary":
@@ -289,4 +303,200 @@ if page == "Sales Summary":
 elif page == "Customer Feedback":
     st.header("CUSTOMER FEEDBACK")
     
+    col1, col2, col3, col4, col5 = st.columns(5)
     
+    with col1:
+        df_pop_fb = mostPopularFeedback(con)
+        if not df_pop_fb.empty:
+            val_pop_fb = df_pop_fb.iloc[0, 0]
+            st.metric(label="Most Popular Feedback", value=str(val_pop_fb))
+
+    with col2:
+        df_ship_mode = mostPopularShipMode(con)
+        if not df_ship_mode.empty:
+            val_ship_mode = df_ship_mode.iloc[0, 0]
+            st.metric(label="Most Popular Ship Mode", value=str(val_ship_mode))
+
+    with col3:
+        df_pos_maker = mostPositiveCarMaker(con)
+        if not df_pos_maker.empty:
+            val_pos_maker = df_pos_maker.iloc[0, 0]
+            st.metric(label="Most Positive Car Maker", value=str(val_pos_maker))
+
+    with col4:
+        df_pos_type = mostPositiveCarType(con)
+        if not df_pos_type.empty:
+            val_pos_type = df_pos_type.iloc[0, 0]
+            st.metric(label="Most Positive Car Type", value=str(val_pos_type))
+
+    with col5:
+        df_neg_job = mostNegativeReviewJobGroup(con)
+        if not df_neg_job.empty:
+            val_neg_job = df_neg_job.iloc[0, 0]
+            st.metric(label="Most Negative Job Group", value=str(val_neg_job))
+
+    st.markdown("---")
+
+    col_chart1, col_chart2 = st.columns(2)
+    with col_chart1:
+        df_ship_shipping = chart_shipModeShipping(con)
+        if not df_ship_shipping.empty:
+            fig_ship_shipping = px.bar(
+                df_ship_shipping,
+                x=df_ship_shipping.columns[0],
+                y=df_ship_shipping.columns[2],
+                color=df_ship_shipping.columns[1],
+                title="Ship Mode & Shipping",
+                barmode='stack'
+            )
+            st.plotly_chart(fig_ship_shipping, use_container_width=True)
+
+    with col_chart2:
+        df_ship_leadtime = chart_shippingLeadtime(con)
+        if not df_ship_leadtime.empty:
+            fig_ship_leadtime = px.line(
+                df_ship_leadtime,
+                x=df_ship_leadtime.columns[1],
+                y=df_ship_leadtime.columns[2],
+                color=df_ship_leadtime.columns[0],
+                title="Shipping Lead Time"
+            )
+            fig_ship_leadtime.update_traces(line_shape='spline')
+            st.plotly_chart(fig_ship_leadtime, use_container_width=True)
+
+    col_chart3, col_chart4 = st.columns(2)
+    with col_chart3:
+        df_pos_cmaker = chart_positiveCarMaker(con).head(10)
+        if not df_pos_cmaker.empty:
+            fig_pos_cmaker = px.bar(
+                df_pos_cmaker,
+                x=df_pos_cmaker.columns[0],
+                y=df_pos_cmaker.columns[1],
+                title="Positive Reviews by Car Maker",
+                color=df_pos_cmaker.columns[0]
+            )
+            fig_pos_cmaker.update_layout(showlegend=False)
+            st.plotly_chart(fig_pos_cmaker, use_container_width=True)
+
+    with col_chart4:
+        df_neg_cmaker = chart_negativeCarMaker(con).head(10)
+        if not df_neg_cmaker.empty:
+            fig_neg_cmaker = px.bar(
+                df_neg_cmaker,
+                x=df_neg_cmaker.columns[0],
+                y=df_neg_cmaker.columns[1],
+                title="Negative Reviews by Car Maker",
+                color=df_neg_cmaker.columns[0]
+            )
+            fig_neg_cmaker.update_layout(showlegend=False)
+            st.plotly_chart(fig_neg_cmaker, use_container_width=True)
+
+    col_chart5, col_chart6 = st.columns(2)
+    with col_chart5:
+        df_pos_ctype = chart_positiveCarType(con).head(10)
+        if not df_pos_ctype.empty:
+            fig_pos_ctype = px.bar(
+                df_pos_ctype,
+                x=df_pos_ctype.columns[0],
+                y=df_pos_ctype.columns[1],
+                title="Positive Reviews by Car Type",
+                color=df_pos_ctype.columns[0]
+            )
+            fig_pos_ctype.update_layout(showlegend=False)
+            st.plotly_chart(fig_pos_ctype, use_container_width=True)
+
+    with col_chart6:
+        df_neg_ctype = chart_negativeCarType(con).head(10)
+        if not df_neg_ctype.empty:
+            fig_neg_ctype = px.bar(
+                df_neg_ctype,
+                x=df_neg_ctype.columns[0],
+                y=df_neg_ctype.columns[1],
+                title="Negative Reviews by Car Type",
+                color=df_neg_ctype.columns[0]
+            )
+            fig_neg_ctype.update_layout(showlegend=False)
+            st.plotly_chart(fig_neg_ctype, use_container_width=True)
+
+    st.markdown("---")
+
+    st.markdown("Customer Feedback and Car Maker Matrix")
+    df_mat_fb_cmaker = matrix_feedback_carMaker(con)
+    
+    if not df_mat_fb_cmaker.empty:
+        if len(df_mat_fb_cmaker.columns) == 3:
+            df_h1 = df_mat_fb_cmaker.pivot(
+                index=df_mat_fb_cmaker.columns[1],
+                columns=df_mat_fb_cmaker.columns[0],
+                values=df_mat_fb_cmaker.columns[2]
+            ).fillna(0)
+        else:
+            df_h1 = df_mat_fb_cmaker.set_index(df_mat_fb_cmaker.columns[0])
+            
+        fig_h1 = px.imshow(
+            df_h1,
+            text_auto=True,
+            aspect="auto",
+            color_continuous_scale="Blues"
+        )
+        
+        fig_h1.update_layout(
+            xaxis_title="Customer Feedback",
+            yaxis_title="Car Maker",
+            coloraxis_showscale=True
+        )
+        st.plotly_chart(fig_h1, use_container_width=True)
+
+    st.markdown("Customer Feedback and Car Type Matrix")
+    df_mat_fb_ctype = matrix_feedback_carType(con)
+    
+    if not df_mat_fb_ctype.empty:
+        if len(df_mat_fb_ctype.columns) == 3:
+            df_h2 = df_mat_fb_ctype.pivot(
+                index=df_mat_fb_ctype.columns[0],
+                columns=df_mat_fb_ctype.columns[1],
+                values=df_mat_fb_ctype.columns[2]
+            ).fillna(0)
+        else:
+            df_h2 = df_mat_fb_ctype.set_index(df_mat_fb_ctype.columns[0])
+            
+        fig_h2 = px.imshow(
+            df_h2,
+            text_auto=True,
+            aspect="auto",
+            color_continuous_scale="Oranges"
+        )
+        
+        fig_h2.update_layout(
+            xaxis_title="Customer Feedback",
+            yaxis_title="Car Type",
+            coloraxis_showscale=True
+        )
+        st.plotly_chart(fig_h2, use_container_width=True)
+
+    st.markdown("Customer Feedback and Job Group Matrix")
+    df_mat_fb_job = matrix_feedback_jobGroup(con)
+    
+    if not df_mat_fb_job.empty:
+        if len(df_mat_fb_job.columns) == 3:
+            df_h3 = df_mat_fb_job.pivot(
+                index=df_mat_fb_job.columns[0],
+                columns=df_mat_fb_job.columns[1],
+                values=df_mat_fb_job.columns[2]
+            ).fillna(0)
+        else:
+            df_h3 = df_mat_fb_job.set_index(df_mat_fb_job.columns[0])
+            
+        fig_h3 = px.imshow(
+            df_h3,
+            text_auto=True,
+            aspect="auto",
+            color_continuous_scale="Greens"
+        )
+        
+        fig_h3.update_layout(
+            xaxis_title="Customer Feedback",
+            yaxis_title="Job Group",
+            coloraxis_showscale=True
+        )
+        st.plotly_chart(fig_h3, use_container_width=True)
