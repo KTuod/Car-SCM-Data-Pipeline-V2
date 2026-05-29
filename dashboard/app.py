@@ -104,8 +104,7 @@ from db_queries import (
 )
 
 if page == "Sales Summary":
-    # PAGE 1: SALES SUMMARY
-    ## Metrics
+    # Metrics
 
     st.header("SALES SUMMARY")
     
@@ -144,7 +143,7 @@ if page == "Sales Summary":
 
     st.markdown("---")
     
-    # Line 1
+    # Charts
     col_chart1, col_chart2 = st.columns(2)
     with col_chart1:
         df_month = chart_salesByMonth(con)
@@ -172,7 +171,7 @@ if page == "Sales Summary":
             fig_carMaker.update_layout(showlegend = False)
             st.plotly_chart(fig_carMaker, use_container_width = True)
             
-    # Line 2
+
     df_trend = charts_revenueByCarMaker(con) 
 
     if not df_trend.empty:
@@ -196,7 +195,7 @@ if page == "Sales Summary":
         fig_line.update_traces(line_shape='spline')
         st.plotly_chart(fig_line, use_container_width = True)
     
-    # Line 3
+
     col_chart4, col_chart5 = st.columns(2)
     with col_chart4:
         df_color = chart_carColour(con).head(10)
@@ -222,7 +221,6 @@ if page == "Sales Summary":
             fig_credit.update_layout(showlegend = False)
             st.plotly_chart(fig_credit, use_container_width = True)
 
-    # Line 4
     col_chart6, col_chart7 = st.columns(2)
 
     with col_chart6:
@@ -249,7 +247,6 @@ if page == "Sales Summary":
             fig_group.update_layout(showlegend = False)
             st.plotly_chart(fig_group, use_container_width = True)
 
-    # Line 4
     st.markdown("---")
 
     st.markdown("Car Type and Color Matrix")
@@ -303,6 +300,7 @@ if page == "Sales Summary":
 elif page == "Customer Feedback":
     st.header("CUSTOMER FEEDBACK")
     
+    # Metrics
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
@@ -336,6 +334,8 @@ elif page == "Customer Feedback":
             st.metric(label="Most Negative Job Group", value=str(val_neg_job))
 
     st.markdown("---")
+    
+    # Charts
 
     col_chart1, col_chart2 = st.columns(2)
     with col_chart1:
@@ -419,6 +419,8 @@ elif page == "Customer Feedback":
             st.plotly_chart(fig_neg_ctype, use_container_width=True)
 
     st.markdown("---")
+    
+    # Matrix
 
     st.markdown("Customer Feedback and Car Maker Matrix")
     df_mat_fb_cmaker = matrix_feedback_carMaker(con)

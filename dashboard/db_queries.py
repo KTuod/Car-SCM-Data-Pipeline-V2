@@ -92,6 +92,9 @@ def charts_revenueByCarMaker(_con):
     query = read_sql_file(filepath)
     return _con.execute(query).df()
 
+# Page 2
+## Metrics
+
 @st.cache_data(ttl = 600)
 def mostNegativeReviewJobGroup(_con):
     filepath = "queries/page_2/metrics/metrics_mostNegativeReviewJobGroup.sql"
@@ -121,6 +124,8 @@ def mostPositiveCarType(_con):
     filepath = "queries/page_2/metrics/metrics_mostPositiveCarType.sql"
     query = read_sql_file(filepath)
     return _con.execute(query).df()
+
+## Charts
 
 @st.cache_data(ttl = 600)
 def chart_shipModeShipping(_con):
