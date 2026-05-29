@@ -337,12 +337,12 @@ streamlit run dashboard/app.py
 ```
 After executing the command, Streamlit will expose a local URL (typically `http://localhost:8501`) where you can interact with SCM KPIs and transactional graphs.
 
-![Car SCM Dashboard Page 1.1](/workspaces/scm-data-pipeline-v2/dashboard/images/dashboard_page1.1.png)
-![Car SCM Dashboard Page 1.2](/workspaces/scm-data-pipeline-v2/dashboard/images/dashboard_page1.2.png)
-![Car SCM Dashboard Page 1.3](/workspaces/scm-data-pipeline-v2/dashboard/images/dashboard_page1.3.png)
+![Car SCM Dashboard Page 1.1](/dashboard/images/dashboard_page1.1.png)
+![Car SCM Dashboard Page 1.2](/dashboard/images/dashboard_page1.2.png)
+![Car SCM Dashboard Page 1.3](/dashboard/images/dashboard_page1.3.png)
 
-![Car SCM Dashboard Page 2.1](/workspaces/scm-data-pipeline-v2/dashboard/images/dashboard_page2.1.png)
-![Car SCM Dashboard Page 2.2](/workspaces/scm-data-pipeline-v2/dashboard/images/dashboard_page2.2.png)
-![Car SCM Dashboard Page 2.3](/workspaces/scm-data-pipeline-v2/dashboard/images/dashboard_page2.3.png)
+![Car SCM Dashboard Page 2.1](/dashboard/images/dashboard_page2.1.png)
+![Car SCM Dashboard Page 2.2](/dashboard/images/dashboard_page2.2.png)
+![Car SCM Dashboard Page 2.3](/dashboard/images/dashboard_page2.3.png)
 
-![Loki Grafana for Tracking Logs](/workspaces/scm-data-pipeline-v2/dashboard/images/dashboard_lokiGrafana.png)
+![Loki Grafana for Tracking Logs](/dashboard/images/dashboard_lokiGrafana.png)
